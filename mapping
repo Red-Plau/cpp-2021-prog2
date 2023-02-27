@@ -1,0 +1,59 @@
+#include "../include/mapping.h"
+#include "../include/cadena.h" //"cadena.h" y "mapping.h" Son propiedad de Laboratorio de Programación 2: InCo-FIng-UDELAR. (Por lo cual no los compartire en GitHub)
+
+/* 
+BASIC CODE DEALING WITH HASH TABLES ("mapping"s). 
+OPTIMISED.
+*/
+
+/*struct _rep_mapping {
+	TInfo * map;
+	nat cantidad;		//queremos prevenir todas las posibles colisiones de claves
+	nat tope;
+	};*/
+	
+//asi que necesitamos un grupo de tinfos (osea, una tcadena)
+
+struct _rep_mapping {
+	TCadena * map;
+	nat cantidad;		//asociacion: clave%tope, luego buscar por natinfo a la  clave
+	nat tope;
+	};
+
+TMapping crearMap(nat M) { 
+	TMapping creado = new _rep_mapping;
+	(*creado).tope = M;
+	(*creado).cantidad = 0;
+	(*creado).map = new TCadena[M];
+	for (nat i = 0; i < M; i++){
+		(*creado).map[i] = crearCadena();
+	}
+	return creado;
+	}
+
+void liberarMap(TMapping map) {
+	for (nat i = 0; i < (*map).tope; i++){
+		liberarCadena((*map).map[i]);
+	}
+	delete [] (*map).map;
+	delete map;
+	}
+
+TMapping asociarEnMap(nat clave, double valor, TMapping map) { 
+	//clave mod tamaño
+	(*map).map[clave%(*map).tope] = insertarAlInicio(clave, valor, (*map).map[clave%(*map).tope]);
+	(*map).cantidad++;
+	return map; 
+	}
+
+TMapping desasociarEnMap(nat clave, TMapping map) { 
+	(*map).map[clave%(*map).tope] = removerDeCadena(clave, (*map).map[clave%(*map).tope]);
+	(*map).cantidad--;
+	return map; 
+	}
+
+bool esClaveEnMap(nat clave, TMapping map) { return estaEnCadena(clave, (*map).map[clave%(*map).tope]); }
+
+double valorEnMap(nat clave, TMapping map) { return realInfo(infoCadena(clave, (*map).map[clave%(*map).tope])); }
+
+bool estaLlenoMap(TMapping map) { return (*map).cantidad == (*map).tope; }

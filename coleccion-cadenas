@@ -1,0 +1,49 @@
+#include "../include/colCadenas.h" //"colCadenas.h" Es propiedad de Laboratorio de Programación 2: InCo-FIng-UDELAR. (Por lo cual no lo compartire en GitHub)
+
+/* 
+BASIC CODE DEALING WITH COLLECTIONS OF LINKED LISTS ("colcadena"s). 
+OPTIMISED.
+*/
+
+struct _rep_colCadenas {
+	TCadena *colc;
+	nat tamanio;
+	};
+
+TColCadenas crearColCadenas(nat tamanio) {
+	TColCadenas creado = new _rep_colCadenas;
+	(*creado).tamanio = tamanio;
+	(*creado).colc = new TCadena[tamanio];
+	for (nat i = 0; i < tamanio; i++){
+		 (*creado).colc[i] = crearCadena();
+	 }
+	return creado;
+}
+
+void liberarColCadenas(TColCadenas col) {
+	for (nat i = 0; i < (*col).tamanio; i++)
+		liberarCadena((*col).colc[i]);
+	delete [] (*col).colc;
+	delete col;
+}
+
+nat tamanioColCadenas(TColCadenas col) { return (*col).tamanio; }
+
+TCadena cadenaDeColCadenas(nat pos, TColCadenas col) { return (*col).colc[pos]; }
+
+nat cantidadColCadenas(nat pos, TColCadenas col) { return cantidadEnCadena((*col).colc[pos]); }
+
+bool estaEnColCadenas(nat natural, nat pos, TColCadenas col) { return estaEnCadena(natural, (*col).colc[pos]); }
+
+TColCadenas insertarEnColCadenas(nat natural, double real, nat pos,
+                                 TColCadenas col) {
+	(*col).colc[pos] = insertarAlInicio(natural, real, (*col).colc[pos]);
+	return col;
+}
+
+TInfo infoEnColCadenas(nat natural, nat pos, TColCadenas col) { return infoCadena(natural, (*col).colc[pos]); }
+
+TColCadenas removerDeColCadenas(nat natural, nat pos, TColCadenas col) {
+	(*col).colc[pos] = removerDeCadena(natural, (*col).colc[pos]);
+	return col;
+}

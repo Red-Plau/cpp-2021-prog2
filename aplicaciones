@@ -1,0 +1,461 @@
+#include "../include/aplicaciones.h"
+#include "../include/colCadenas.h"
+#include "../include/mapping.h" //"aplicaciones.h", "colCadenas.h" y "mapping.h" Son propiedad de Laboratorio de Programación 2: InCo-FIng-UDELAR. (Por lo cual no los compartire en GitHub)
+
+/* 
+BASIC CODE CREATING APPLICATIONS FOR ALL PREVIOUSLY IMPLEMENTED DYNAMIC DATA STRUCTURE TYPES. 
+OPTIMISED.
+*/
+
+#include <stdlib.h>
+
+/****FUNCIONES AUXILIARES****/
+	/*que no contienen la 
+	 estructura principal
+	   de una funcion*/
+	   
+int altura(TAbb abb){
+	if (esVacioAbb(abb))
+		return 0;
+	else{
+		if (altura(izquierdo(abb)) < altura(derecho(abb)))
+			return altura(derecho(abb)) + 1;
+		else
+			return altura(izquierdo(abb)) + 1;
+	}
+}
+
+/****************************/
+
+bool esAvlAux(TAbb abb, int &altura){
+	if (!esVacioAbb(abb)){
+		altura++;
+		if (esVacioAbb(izquierdo(abb)) && esVacioAbb(derecho(abb)))
+			return true;
+		else{
+			int altura2 = altura;
+			if (esAvlAux(izquierdo(abb), altura) && esAvlAux(derecho(abb), altura2)){
+				int diff = abs(altura - altura2);
+				if (altura < altura2)
+					altura = altura2;
+				return diff <= 1;
+			} else
+				return false;
+		}
+	} else
+		return true;
+}
+
+bool esAvl(TAbb abb){
+	int altura = 0;
+	return esAvlAux(abb, altura);
+}
+
+TAbb avlMinAux(int h, nat &contador){
+	//printf("h es %d ", h);
+	//printf("y la altura es %d\n", ref); 
+	if (h > 0){
+		TAbb abbi = avlMinAux(h-1, contador);
+		TInfo elem = crearInfo(contador, 0);
+		contador++;
+		TAbb abbd = avlMinAux(h-2, contador);
+		return consAbb(elem, abbi, abbd);
+	} else 
+		return NULL;
+}
+
+TAbb avlMin(nat h){
+	int i = h;
+	nat c = 1;
+	return avlMinAux(i, c);
+}
+
+TCadena filtradaOrdenada(TCadena cad, TIterador it){
+	//ordenar con mapping
+	//for loop: en celda de mapping ir sumando todo valor real de la  celda con mismo nat mientras ordenas con un if en cantidad
+	//luego hacer la comparacion y insertar en tcadena resultado
+	TCadena res = crearCadena();
+	if (cad != NULL){
+		reiniciarIterador(it);
+		nat cant = cantidadEnCadena(cad);
+		TMapping cmap = crearMap(cant);
+		TCadena aux = cad;
+		double realaux = 0;
+		for (nat i = 0; i < cant; i++){
+			if (esClaveEnMap(natInfo(primeroEnCadena(aux)), cmap)){
+				realaux = (realInfo(primeroEnCadena(aux))) + valorEnMap(natInfo(primeroEnCadena(aux)), cmap);
+				cmap = desasociarEnMap(natInfo(primeroEnCadena(aux)), cmap);
+			} else
+				realaux = realInfo(primeroEnCadena(aux));
+			cmap = asociarEnMap(natInfo(primeroEnCadena(aux)), realaux, cmap);
+			aux = cadenaSiguiente(aux);
+		}
+		while (estaDefinidaActual(it)){
+			if (esClaveEnMap(actualEnIterador(it), cmap))
+				res = insertarAlFinal(actualEnIterador(it), valorEnMap(actualEnIterador(it), cmap), res);
+			avanzarIterador(it);
+		}
+		liberarMap(cmap);
+	}
+	return res;
+}
+
+bool estaOrdenada(TCadena cad) { 
+	nat cant = cantidadEnCadena(cad);
+	if (cant > 1){ 
+		if (cant == 2){ //si hay dos elems, comparamos y ta
+			return natInfo(primeroEnCadena(cadenaSiguiente(cad))) > natInfo(primeroEnCadena(cad));
+		} else { //si hay mas de dos, comparamos hasta que no se cumpla la igualdad...
+			TCadena aux = cad;
+			while ((primeroEnCadena(cadenaSiguiente(aux)) != primeroEnCadena(cad)) && (natInfo(primeroEnCadena(cadenaSiguiente(aux))) > natInfo(primeroEnCadena(aux)))){
+				aux = cadenaSiguiente(aux);
+			}
+			return primeroEnCadena(cadenaSiguiente(aux)) == primeroEnCadena(cad);
+			//... y retornamos si llego a dar el ciclo por toda la cadena
+		}
+	} else //si es NULL o 1, ya sabemos que esta ordenada
+		return true;
+	}
+
+TCadena mezclaCadenas(TCadena cad1, TCadena cad2) { 
+	if (cad1 == NULL && cad2 == NULL) //miramos cada caso; si ambos son NULL, retornamos
+		return NULL;				  //NULL
+	else if (cad1 != NULL && cad2 == NULL) //si solo hay una no NULL, retornamos esa
+		return copiaCadena(cad1);
+	else if (cad1 == NULL && cad2 != NULL)
+		return copiaCadena(cad2);
+	else { //y si no,
+		TCadena mezcla = crearCadena(); //creamos una cadena vacia para el resultado
+		int cant1 = cantidadEnCadena(cad1);
+		int cant2 = cantidadEnCadena(cad2);
+		if (cant1 == 1 && cant2 == 1) { //si ambas son 1 elemento, comparamos y 
+										//asignamos los valores a donde deberian ir
+			if (natInfo(primeroEnCadena(cad1)) > natInfo(primeroEnCadena(cad2))){
+				mezcla = insertarAlInicio(natInfo(primeroEnCadena(cad1)), realInfo(primeroEnCadena(cad1)), mezcla);
+				mezcla = insertarAlInicio(natInfo(primeroEnCadena(cad2)), realInfo(primeroEnCadena(cad2)), mezcla);
+			} else if (natInfo(primeroEnCadena(cad1)) < natInfo(primeroEnCadena(cad2))){
+				mezcla = insertarAlInicio(natInfo(primeroEnCadena(cad2)), realInfo(primeroEnCadena(cad2)), mezcla);
+				mezcla = insertarAlInicio(natInfo(primeroEnCadena(cad1)), realInfo(primeroEnCadena(cad1)), mezcla);
+			} else {
+				mezcla = insertarAlInicio(natInfo(primeroEnCadena(cad1)), realInfo(primeroEnCadena(cad1)), mezcla);
+			}
+		} else { //si no, vamos iterando hasta que hayamos pasado por todo elemento 
+				 //de cant. vamos a ver:
+			while (cant1 != 0 || cant2 != 0){
+				if (cant1 == 0){ //si no quedan mas elems de cad1, metemos lo que nos
+								 //queda de cad2
+					mezcla = insertarAlFinal(natInfo(primeroEnCadena(cad2)), realInfo(primeroEnCadena(cad2)), mezcla);
+					cad2 = cadenaSiguiente(cad2);
+					cant2--;
+				} else if (cant2 == 0) {//si no quedan mas elems de cad2, metemos lo 
+										//que nos queda de cad2
+					mezcla = insertarAlFinal(natInfo(primeroEnCadena(cad1)), realInfo(primeroEnCadena(cad1)), mezcla);
+					cad1 = cadenaSiguiente(cad1);
+					cant1--;
+				} else { //si no, seguimos comparando los nats e insertando al final
+						 //para mantener el orden de ambas cads
+					if (natInfo(primeroEnCadena(cad1)) > natInfo(primeroEnCadena(cad2))){
+						mezcla = insertarAlFinal(natInfo(primeroEnCadena(cad2)), realInfo(primeroEnCadena(cad2)), mezcla);
+						cad2 = cadenaSiguiente(cad2);
+						cant2--;
+					} else if (natInfo(primeroEnCadena(cad1)) < natInfo(primeroEnCadena(cad2))){
+						mezcla = insertarAlFinal(natInfo(primeroEnCadena(cad1)), realInfo(primeroEnCadena(cad1)), mezcla);
+						cad1 = cadenaSiguiente(cad1);
+						cant1--;
+					} else {
+						mezcla = insertarAlFinal(natInfo(primeroEnCadena(cad1)), realInfo(primeroEnCadena(cad1)), mezcla);
+						cad1 = cadenaSiguiente(cad1);
+						cant1--;
+						cad2 = cadenaSiguiente(cad2);
+						cant2--;
+					}
+				}
+			}
+		}
+		return mezcla;
+	}
+	}
+
+TAbb crearBalanceadoAux(TInfo *arreglo, int ni, int nd){
+	TAbb ret;
+	if (ni > nd) //si nos pasamos del indice de la izq, ya esta
+		ret = NULL;
+	else { //si seguimos bien con los valores,
+		nat m = (ni + nd)/2;
+		//printf("%d\n",nd);
+		//printf("%d\n",m);
+		//pasamos por todo lo izq al elemento del medio
+		TAbb raizl = crearBalanceadoAux(arreglo, ni, m-1);
+		//idem con lo der a partir del medio al final
+		TAbb raizr = crearBalanceadoAux(arreglo, m+1, nd);
+		ret = consAbb(copiaInfo(arreglo[m]), raizl, raizr); //juntamos todo y pimba
+		}
+	return ret;
+	}
+
+TAbb crearBalanceado(TInfo *arreglo, nat n) { 
+	if (n == 0)
+		return NULL;
+	else { 
+		TAbb abb = crearAbb();
+		if (n == 1){
+			abb = insertarEnAbb(copiaInfo(arreglo[0]), abb);
+		} else {
+			abb = crearBalanceadoAux(arreglo, 0, n-1);
+		}
+		return abb; 
+	}
+	}
+
+TAbb unionAbbs(TAbb abb1, TAbb abb2) { 
+	TCadena cad1 = linealizacion(abb1); //linealizacion en ambos abbs
+	TCadena cad2 = linealizacion(abb2); //para convertirlos en cads
+	TCadena cada = mezclaCadenas(cad1, cad2); //para que cumpla el creciente
+	nat canta = cantidadEnCadena(cada);
+	TInfo carreglo[canta];
+	for (nat i = 0; i < canta; i++){
+		carreglo[i] = primeroEnCadena(cada); //armamos arreglo para cB
+		cada = cadenaSiguiente(cada);
+	}
+	TAbb ret = crearBalanceado(carreglo, canta); //pumba
+	liberarCadena(cad1); //liberamos toda la memoria
+	liberarCadena(cad2);
+	liberarCadena(cada);
+	return ret; 
+	}
+
+TCola ordenadaPorModulo(nat p, TCadena cad) { 
+	TCola cola = crearCola(); //cola vacia asi si es null ya de una retornamos eso
+	if (cad != NULL) { 
+		if (primeroEnCadena(cad) == primeroEnCadena(cadenaSiguiente(cad))) //1 elemento
+			cola = encolar(primeroEnCadena(cad), cola); //encolamos ese 1
+		else {
+			TCadena arreglo[p]; //armamos arreglo para cadenas
+			for (nat a = 0; a < p; a++){ //inicializamos las cadenas en el arreglo
+				arreglo[a] = crearCadena();
+			}
+			int cant = cantidadEnCadena(cad);
+			for (int i = 0; i < cant; i++){
+				arreglo[natInfo(primeroEnCadena(cad))%p] = insertarAlFinal(natInfo(primeroEnCadena(cad)), realInfo(primeroEnCadena(cad)), arreglo[natInfo(primeroEnCadena(cad))%p]); //asignamos infos a sus modulos
+				cad = cadenaSiguiente(cad);
+			}
+			for (nat j = 0; j < p; j++){ //finalmente agregamos infos a la cola
+				cant = cantidadEnCadena(arreglo[j]); //este se fija en la posicion del 
+													 //arreglo
+				for (int k = cant; k > 0; k--){
+					cola = encolar(primeroEnCadena(arreglo[j]), cola);
+					arreglo[j] = cadenaSiguiente(arreglo[j]); //itera por  la cad
+				}
+				liberarCadena(arreglo[j]); //liberamos las cadenas...
+			}
+			}
+		}
+	return cola;
+	}
+
+TPila menoresQueElResto(TCadena cad, nat cantidad) { 
+	/*cantidadEnCadena(cad) = cantidad
+	 La TPila resultado no comparte memoria con 'cad'.*/
+	TPila pila = crearPila();
+	if (cad != NULL){ //si es vacia, retornamos la pila vacia nomas
+		TCadena aux = cad;
+		pila = apilar (primeroEnCadena(aux), pila);
+		aux = cadenaSiguiente(aux);
+		while (aux != cad){ //vamos iterando hasta haber visitado todos los elementos
+							//de aux
+			if (natInfo(cima(pila)) < natInfo(primeroEnCadena(aux))){
+				pila = apilar (primeroEnCadena(aux), pila);
+			} else { //desapilamos hasta que cima sea menor que el primero
+				while (cantidadEnPila(pila) > 0 && natInfo(cima(pila)) >= natInfo(primeroEnCadena(aux))){ 
+					pila = desapilar(pila);
+				}
+				pila = apilar (primeroEnCadena(aux), pila); //ahi apilamos y seguimos
+			}
+			aux = cadenaSiguiente(aux);
+		}
+	}
+	return pila;
+	}
+
+void linealizacionAux(TAbb abb, TCadena &cad){
+	if (esVacioAbb(abb)){
+		return;
+	} else {
+		linealizacionAux(derecho(abb), cad);
+		cad = insertarAlInicio(natInfo(raiz(abb)), realInfo(raiz(abb)), cad);
+		linealizacionAux(izquierdo(abb), cad);
+	}
+}
+
+TCadena linealizacion(TAbb abb) { 
+	if (!esVacioAbb(abb)){
+		TCadena cad = crearCadena();
+		linealizacionAux(abb, cad);
+		return cad;
+	} else
+		return NULL;
+}
+
+void imprimirAbbAux(TAbb abb, nat nivel){
+	nivel ++;
+	if (!esVacioAbb(abb)){
+		imprimirAbbAux(derecho(abb), nivel);
+		if ((nivel-1) == 0){
+			imprimirInfo(raiz(abb));
+		} else {
+			for (nat i = 0; i < (nivel-1); i++){
+				printf ("-");
+			} 
+			imprimirInfo(raiz(abb));
+		}
+		printf("\n");
+		imprimirAbbAux(izquierdo(abb), nivel);
+	} else {
+		nivel --;
+	}
+}
+
+void imprimirAbb(TAbb abb) {
+	nat nivel = 0;
+	if (esVacioAbb(abb)){
+		return;
+	} else {
+		imprimirAbbAux(abb, nivel);
+	}
+}
+
+bool esPerfectoAux(TAbb abb, nat &altura){
+	if (!esVacioAbb(abb)){
+		altura++;
+		if (esVacioAbb(izquierdo(abb)) && esVacioAbb(derecho(abb)))
+			return true;
+		else if (((esVacioAbb(izquierdo(abb)) && !esVacioAbb(derecho(abb)))) || (!esVacioAbb(izquierdo(abb)) && esVacioAbb(derecho(abb))))
+			return false;
+		else{
+			nat altura2 = altura;
+			if (esPerfectoAux(izquierdo(abb), altura) && esPerfectoAux(derecho(abb),altura2))
+				return altura == altura2;
+			else
+				return false;
+		}
+	} else
+		return true;
+}
+
+bool esPerfecto(TAbb abb) { 
+	nat altura = 0;
+	return esPerfectoAux(abb, altura);	
+}
+
+TAbb menores(double limite, TAbb abb) { 
+	TAbb ret;
+	if (abb == NULL)
+		ret = NULL;
+	else {
+		TAbb mizq = menores(limite, izquierdo(abb));
+		TAbb mder = menores(limite, derecho(abb));
+		
+		if (realInfo(raiz(abb)) < limite){
+			ret = crearAbb();
+			ret = consAbb(copiaInfo(raiz(abb)), mizq, mder);
+		} else if (mizq == NULL)
+			ret = mder;
+		  else if (mder == NULL)
+			ret = mizq;
+		else {
+			TInfo mayor = copiaInfo(mayorEnAbb(mizq));
+			mizq = removerDeAbb(natInfo(mayorEnAbb(mizq)), mizq);
+			ret = crearAbb();
+			ret = consAbb(mayor, mizq, mder);
+		}
+	}
+	return ret;
+}
+
+void caminoAscendenteAux(nat clave, nat &k, TAbb abb, TIterador iter){
+	if (!esVacioAbb(abb)){
+		if (clave != natInfo(raiz(abb))){
+			if (clave < natInfo(raiz(abb)))
+				caminoAscendenteAux(clave, k, izquierdo(abb), iter);
+			else
+				caminoAscendenteAux(clave, k, derecho(abb), iter);
+		}
+		if (0 < k){
+			agregarAIterador(natInfo(raiz(abb)), iter);
+			k--;
+		}
+	}
+}
+
+TIterador caminoAscendente(nat clave, nat k, TAbb abb) { 
+	TIterador iter = crearIterador();
+	caminoAscendenteAux(clave, k, abb, iter);
+	return iter;
+}
+
+void imprimirPalabrasCortasAux(nat k, char palabra[] , TPalabras palabras, nat nivel) {
+	if (subarboles(palabras) == NULL){
+		if (nivel <= k /*&& letra(palabras) != '\0'*/) {
+			palabra[nivel] = letra(palabras);
+			printf("%s", palabra);
+			printf("\n");
+		} 
+	} else {
+		palabra[nivel] = letra(palabras);
+		nivel++;
+		imprimirPalabrasCortasAux(k, palabra, subarboles(palabras), nivel);
+		palabra[nivel] = '\0';
+		nivel--;
+	}
+	if (siguientes(palabras) != NULL)
+		imprimirPalabrasCortasAux(k, palabra, siguientes(palabras), nivel);
+}
+
+void imprimirPalabrasCortas(nat k, TPalabras palabras) {
+	//(hay que imprimir PALABRAS, no letras separadas)
+	nat nivel = 0;
+	char palabra[k];
+	imprimirPalabrasCortasAux(k, palabra, subarboles(palabras), nivel);
+}
+
+TPalabras buscarFinPrefijoAux (ArregloChars prefijo, TPalabras palabras, nat i){
+	TPalabras ret = NULL;
+	if (palabras != NULL){
+		if (prefijo[i] == letra(palabras))
+			if (prefijo[i+1] != '\0')
+				ret = buscarFinPrefijoAux(prefijo, subarboles(palabras), i+1);
+			else
+				ret = palabras;
+		else {
+			ret = buscarFinPrefijoAux(prefijo, siguientes(palabras), i);
+		}
+	}
+	return ret;
+}
+
+TPalabras buscarFinPrefijo(ArregloChars prefijo, TPalabras palabras) {
+  //(retornar arbol con ultimo de prefijo como su raiz)
+	if (palabras == NULL || letra(palabras) == '\0')
+		return NULL;
+	else
+		return buscarFinPrefijoAux(prefijo, subarboles(palabras), 0);
+}
+
+void reversoDeIteradorAux(TIterador a, TIterador b){
+	nat actual;
+	if (estaDefinidaActual(a)){
+		actual = actualEnIterador(a);
+		avanzarIterador(a);
+		reversoDeIteradorAux(a,b);
+		agregarAIterador(actual, b);
+	}
+}
+
+TIterador reversoDeIterador(TIterador iter) {
+	TIterador aux = crearIterador();
+	reiniciarIterador(iter);
+	if (estaDefinidaActual(iter)){
+		reversoDeIteradorAux(iter, aux);
+	}
+	return aux;
+}

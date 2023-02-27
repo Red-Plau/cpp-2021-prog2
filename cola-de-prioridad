@@ -1,0 +1,156 @@
+#include "../include/colaDePrioridad.h"
+#include "../include/info.h" //"colaDePrioridad.h" e "info.h" Son propiedad de Laboratorio de Programación 2: InCo-FIng-UDELAR. (Por lo cual no los compartire en GitHub)
+
+/* 
+BASIC CODE DEALING WITH PRIORITY QUEUES ("colaDePrioridad"s). 
+OPTIMISED.
+*/
+
+struct _rep_colaDePrioridad {
+	TInfo *cola;
+	nat *posicion;
+	nat tope;
+	nat cant;
+	bool orden;
+	};
+
+
+void filtradoAscendente(TColaDePrioridad &cp, nat pos){
+	if ((*cp).orden == true){
+		TInfo aux = (*cp).cola[pos];
+		while ((pos != 1) && (realInfo((*cp).cola[pos/2]) > realInfo(aux))){
+			(*cp).cola[pos] = (*cp).cola[pos/2];
+			(*cp).posicion[natInfo((*cp).cola[pos/2])] = pos;
+			pos = pos/2;
+		}
+		(*cp).cola[pos] = aux;
+		(*cp).posicion[natInfo(aux)] = pos;
+	} else {
+		TInfo aux = (*cp).cola[pos];
+		while ((pos != 1) && (realInfo((*cp).cola[pos/2]) < realInfo(aux))){
+			(*cp).cola[pos] = (*cp).cola[pos/2];
+			(*cp).posicion[natInfo((*cp).cola[pos/2])] = pos;
+			pos = pos/2;
+		}
+		(*cp).cola[pos] = aux;
+		(*cp).posicion[natInfo(aux)] = pos;
+	}
+}
+
+void filtradoDescendente(TColaDePrioridad &cp, nat pos){
+	if ((*cp).orden == true){
+		TInfo aux = (*cp).cola[pos];
+		if (2*pos <= (*cp).cant){
+			while (2*pos <= (*cp).cant && (realInfo(aux) > realInfo((*cp).cola[2*pos]))){
+				nat child = 2*pos;
+				if ((child+1 <= (*cp).cant) && (realInfo((*cp).cola[child+1]) < realInfo((*cp).cola[child])))
+					child = child+1;
+				if (realInfo((*cp).cola[child]) < realInfo(aux)){
+					(*cp).cola[pos] = (*cp).cola[child];
+					(*cp).posicion[natInfo((*cp).cola[child])] = pos;
+					pos = child;
+				}
+			}
+			(*cp).cola[pos] = aux;
+			(*cp).posicion[natInfo(aux)] = pos;
+		}
+	} else {
+		TInfo aux = (*cp).cola[pos];
+		if (2*pos <= (*cp).cant){
+			while (2*pos <= (*cp).cant && (realInfo(aux) < realInfo((*cp).cola[2*pos]))){
+				nat child = 2*pos;
+				if ((child+1 <= (*cp).cant) && (realInfo((*cp).cola[child+1]) > realInfo((*cp).cola[child])))
+					child = child+1;
+				if (realInfo((*cp).cola[child]) > realInfo(aux)){
+					(*cp).cola[pos] = (*cp).cola[child];
+					(*cp).posicion[natInfo((*cp).cola[child])] = pos;
+					pos = child;
+				}
+			}
+			(*cp).cola[pos] = aux;
+			(*cp).posicion[natInfo(aux)] = pos;
+		}
+	}
+}
+
+TColaDePrioridad crearCP(nat N) { 
+	TColaDePrioridad nueva = new _rep_colaDePrioridad;
+	(*nueva).orden = true;
+	(*nueva).tope = N;
+	(*nueva).cant = 0;
+	(*nueva).cola = new TInfo[N+1];
+	(*nueva).posicion = new nat[N+1];
+	for (nat i = 0; i <= N; i++)
+		(*nueva).posicion[i] = 0;
+	return nueva; 
+	}
+
+TColaDePrioridad invertirPrioridad(TColaDePrioridad cp) { 
+	(*cp).orden = !(*cp).orden;
+	for (nat i = (*cp).cant/2; i >= 1; i--)
+		filtradoDescendente(cp, i);
+	return cp; 
+	}
+  
+void liberarCP(TColaDePrioridad cp) {
+	if (cp != NULL){
+		for (nat i = 1; i <= (*cp).cant; i++)
+			liberarInfo((*cp).cola[i]);
+		delete [] (*cp).cola;
+		delete [] (*cp).posicion;
+		delete cp;
+	}
+}
+
+TColaDePrioridad insertarEnCP(nat elem, double valor, TColaDePrioridad cp) {
+	if (elem != 0 && elem <= (*cp).tope){
+		if ((*cp).posicion[elem] != 0){
+			TInfo insertar = crearInfo(elem, valor);
+			bool menor = realInfo((*cp).cola[(*cp).posicion[elem]]) < valor;
+			liberarInfo((*cp).cola[(*cp).posicion[elem]]);
+			(*cp).cola[(*cp).posicion[elem]] = insertar;
+			if (menor)
+				filtradoDescendente(cp, (*cp).posicion[elem]);
+			else
+				filtradoAscendente(cp, (*cp).posicion[elem]);
+		} else if ((*cp).cant != (*cp).tope){
+			(*cp).cant++;
+			(*cp).cola[(*cp).cant] = crearInfo(elem, valor);
+			(*cp).posicion[elem] = (*cp).cant;
+			filtradoAscendente(cp, (*cp).cant); //se encarga de ordenar por las prioridades
+		}
+	}
+  return cp;
+}
+
+bool estaVaciaCP(TColaDePrioridad cp) { 
+	if (cp != NULL)
+		return (*cp).cant == 0; 
+	else
+		return false;
+	}
+
+nat prioritario(TColaDePrioridad cp)  { return natInfo((*cp).cola[1]); }
+
+TColaDePrioridad eliminarPrioritario(TColaDePrioridad cp)  { 
+	if (cp != NULL && (*cp).cant > 0){
+		(*cp).posicion[natInfo((*cp).cola[1])] = 0;
+		liberarInfo((*cp).cola[1]);
+		if ((*cp).cant != 1){
+			(*cp).posicion[natInfo((*cp).cola[(*cp).cant])] = 1;
+			(*cp).cola[1] = (*cp).cola[(*cp).cant];
+			filtradoDescendente(cp, 1);
+		}
+		(*cp).cant--;
+	}
+	return cp; 
+	}
+
+bool estaEnCP(nat elem, TColaDePrioridad cp)  { 
+	if (cp != NULL && elem > 0 && elem <= (*cp).tope)
+		return (*cp).posicion[elem] != 0;
+	else
+		return false;
+	}
+
+double prioridad(nat elem, TColaDePrioridad cp)  { return realInfo((*cp).cola[(*cp).posicion[elem]]); }

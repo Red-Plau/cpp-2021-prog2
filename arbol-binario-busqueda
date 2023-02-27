@@ -1,0 +1,253 @@
+#include "../include/abb.h" //"abb.h" Es propiedad de Laboratorio de Programación 2: InCo-FIng-UDELAR. (Por lo cual no lo compartire en GitHub)
+
+/* 
+BASIC CODE SORTING, COPYING, ROTATING OR OTHERWISE DEALING WITH BINARY SEARCH TREES ("abb"s). 
+OPTIMISED.
+*/
+
+struct _rep_abb {
+	TInfo elem;
+	TAbb left, right;
+	};
+
+void rotarIzquierda(nat clave, TAbb &abb){
+	if (abb != NULL){
+		if (clave == natInfo((*abb).elem)){
+			TAbb l = (*abb).right;
+			TAbb x = (*l).left;
+			(*l).left = abb;
+			(*abb).right = x;
+			abb = l;
+		} else {
+			if (clave < natInfo((*abb).elem))
+				rotarIzquierda(clave, (*abb).left);
+			else
+				rotarIzquierda(clave, (*abb).right);
+		}
+	}
+}
+
+void rotarIzquierdaDerecha(nat clave, TAbb &abb){
+	if (abb != NULL){
+		if (clave == natInfo((*abb).elem)){
+			TAbb abbd = (*abb).right;
+			if ((*abbd).left != NULL){
+				TAbb l = (*abbd).left;
+				TAbb x = (*l).right;
+				(*l).right = abbd;
+				(*abbd).left = x;
+				(*abb).right = l;
+				
+				l = (*abb).right;
+				x = (*l).left;
+				(*l).left = abb;
+				(*abb).right = x;
+				abb = l;
+			}
+		} else {
+			if (clave < natInfo((*abb).elem))
+				rotarIzquierdaDerecha(clave, (*abb).left);
+			else
+				rotarIzquierdaDerecha(clave, (*abb).right);
+		}
+	}
+}
+
+void rotarDerecha(nat clave, TAbb &abb){
+	if (abb != NULL){
+		if (clave == natInfo((*abb).elem)){
+			TAbb l = (*abb).left;
+			TAbb x = (*l).right;
+			(*l).right = abb;
+			(*abb).left = x;
+			abb = l;
+		} else {
+			if (clave < natInfo((*abb).elem))
+				rotarDerecha(clave, (*abb).left);
+			else
+				rotarDerecha(clave, (*abb).right);
+		}
+	}
+}
+
+void rotarDerechaIzquierda(nat clave, TAbb &abb){
+	if (abb != NULL){
+		if (clave == natInfo((*abb).elem)){
+			TAbb abbi = (*abb).left;
+			if ((*abbi).right != NULL){
+				TAbb l = (*abbi).right;
+				TAbb x = (*l).left;
+				(*l).left = abbi;
+				(*abbi).right = x;
+				(*abb).left = l;
+				
+				l = (*abb).left;
+				x = (*l).right;
+				(*l).right = abb;
+				(*abb).left = x;
+				abb = l;
+			}
+		} else {
+			if (clave < natInfo((*abb).elem))
+				rotarDerechaIzquierda(clave, (*abb).left);
+			else
+				rotarDerechaIzquierda(clave, (*abb).right);
+		}
+	}
+}
+
+TAbb rotar(nat clave, char tipo[2], TAbb abb){
+	if (abb != NULL){
+		TAbb abbclave = buscarSubarbol(clave, abb);
+		if (abbclave != NULL){
+			if (tipo[0] == 'L' && tipo[1]== 'L'){
+				if ((*abbclave).left != NULL)
+					rotarDerecha(clave, abb);
+			} if (tipo[0] == 'L' && tipo[1]== 'R'){
+				if ((*abbclave).left != NULL)
+					rotarDerechaIzquierda(clave, abb);
+			} if (tipo[0] == 'R' && tipo[1]== 'R'){
+				if ((*abbclave).right != NULL)
+					rotarIzquierda(clave, abb);
+			} if (tipo[0] == 'R' && tipo[1]== 'L'){
+				if ((*abbclave).right != NULL)
+					rotarIzquierdaDerecha(clave, abb);
+			}
+		}
+	}
+	return abb;
+}
+
+TAbb crearAbb() { 
+	return NULL;
+	}
+
+void liberarAbb(TAbb abb) {
+	if (abb != NULL){
+		if ((*abb).left != NULL)
+			liberarAbb((*abb).left);
+		if ((*abb).right != NULL)
+			liberarAbb((*abb).right);
+		liberarInfo((*abb).elem);
+		delete abb;
+		}
+	}
+
+bool esVacioAbb(TAbb abb) { return (abb == NULL); }
+
+TAbb buscarSubarbol(nat clave, TAbb abb) { 
+	TAbb ret = NULL;
+	if (abb != NULL){
+		if (clave == natInfo((*abb).elem))
+			ret = abb;
+		else {
+			if (clave < natInfo((*abb).elem))
+				ret = buscarSubarbol(clave, (*abb).left);
+			else
+				ret = buscarSubarbol(clave, (*abb).right);
+		}
+	}
+	return ret;
+}
+
+TInfo raiz(TAbb abb) { return (*abb).elem; }
+
+TAbb izquierdo(TAbb abb) { return (*abb).left; }
+
+TAbb derecho(TAbb abb) { return (*abb).right; }
+
+TInfo menorEnAbb(TAbb abb) { 
+	TInfo ret;
+	if ((*abb).left == NULL)
+		ret = (*abb).elem;
+	else
+		ret = menorEnAbb((*abb).left);
+	return ret;
+	}
+
+TInfo mayorEnAbb(TAbb abb) { 
+	TInfo ret;
+	if ((*abb).right == NULL)
+		ret = (*abb).elem;
+	else
+		ret = mayorEnAbb((*abb).right);
+	return ret;
+	}
+
+TAbb consAbb(TInfo dato, TAbb izq, TAbb der) { 
+	TAbb nuevo = new _rep_abb;
+	(*nuevo).elem = dato;
+	(*nuevo).left = izq;
+	(*nuevo).right = der;
+	return nuevo;
+	}
+
+TAbb insertarEnAbb(TInfo dato, TAbb abb) { 
+	if (abb == NULL){
+		TAbb nuevo = new _rep_abb;
+		(*nuevo).elem = dato;
+		(*nuevo).left = (*nuevo).right = NULL;
+		return nuevo;
+	}
+	if (natInfo(dato) < natInfo((abb->elem)))
+		(*abb).left = insertarEnAbb(dato, (*abb).left);
+	else if (natInfo(dato) > natInfo((abb->elem)))
+		(*abb).right = insertarEnAbb(dato, (*abb).right);
+	return abb;
+	}
+
+TAbb removerDeAbb(nat clave, TAbb abb) { 
+	if (abb == NULL)
+		return NULL;
+	else
+		if (clave < natInfo((*abb).elem))
+			(*abb).left = removerDeAbb(clave, (*abb).left);
+		else if (clave > natInfo((*abb).elem))
+			(*abb).right = removerDeAbb(clave, (*abb).right);
+		else {
+			if ((*abb).left == NULL && (*abb).right == NULL){
+				//remover nodo si es hoja
+				TAbb aux = abb;
+				abb = NULL;
+				liberarInfo((*aux).elem);
+				delete aux;
+			} else if (!((*abb).left != NULL && (*abb).right != NULL)) {
+				//si solo hay 1 subarbol, reemplazar con el der o izq
+				if ((*abb).left != NULL) {
+					//si el subarbol es en izq...
+					TAbb laux = copiaAbb((*abb).left);
+					liberarAbb((*abb).left);
+					liberarInfo((*abb).elem);
+					delete abb;
+					abb = laux;
+				} else if ((*abb).right != NULL) {
+					//si el subarbol es en der...
+					TAbb raux = copiaAbb((*abb).right);
+					liberarAbb((*abb).right);
+					liberarInfo((*abb).elem);
+					delete abb;
+					abb = raux;
+				}
+			} else {
+				//si tiene ambos subarboles, remover nodo y reemplazar 
+				//con mayor en su izq
+				liberarInfo((*abb).elem);
+				TInfo mlaux = copiaInfo(mayorEnAbb((*abb).left));
+				(*abb).left = removerDeAbb(natInfo(mlaux), (*abb).left);
+				(*abb).elem = mlaux;
+			}
+		}
+	return abb;
+}
+
+TAbb copiaAbb(TAbb abb) { 
+	if (abb == NULL)
+		return NULL;
+	else{
+		TAbb nuevo = new _rep_abb;
+		(*nuevo).elem = copiaInfo((*abb).elem);
+		(*nuevo).left = copiaAbb((*abb).left);
+		(*nuevo).right = copiaAbb((*abb).right);
+		return nuevo;
+	}
+	}

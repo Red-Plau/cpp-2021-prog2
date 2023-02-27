@@ -1,0 +1,62 @@
+#include "../include/cola.h" //"cola.h" Es propiedad de Laboratorio de Programación 2: InCo-FIng-UDELAR. (Por lo cual no lo compartire en GitHub)
+
+/* 
+BASIC CODE DEALING WITH QUEUES ("cola"s). 
+OPTIMISED.
+*/
+
+struct nodo {
+	TInfo elem;
+	nodo *ant;
+	};
+
+struct _rep_cola {
+	nodo *front;
+	nodo *back;
+	nat tamanio;
+	};
+
+TCola crearCola() {
+	TCola nuevo = new _rep_cola;
+	(*nuevo).front = (*nuevo).back = NULL;
+	(*nuevo).tamanio = 0;
+	return nuevo;
+	}
+
+void liberarCola(TCola c) { 
+	nodo *aux;
+	while((*c).front != NULL){
+		aux = (*c).front;
+		(*c).front = ((*c).front)->ant;
+		liberarInfo((*aux).elem);
+		delete aux;
+	}
+	delete c;
+	}
+
+nat cantidadEnCola(TCola c) { return (*c).tamanio; }
+
+TCola encolar(TInfo info, TCola c) {
+	nodo *nuevo = new nodo;
+	(*nuevo).elem = copiaInfo(info);
+	(*nuevo).ant = NULL;
+	if ((*c).front == NULL) (*c).front = nuevo;
+	else ((*c).back)->ant = nuevo;
+	(*c).back = nuevo;
+	(*c).tamanio++;
+	return c;
+	}
+
+TInfo frente(TCola c) { return ((*c).front)->elem; }
+
+TCola desencolar(TCola c) { 
+	if((*c).front != NULL){
+		nodo *aux = (*c).front;
+		(*c).front = ((*c).front)->ant;
+		if ((*c).front == NULL) (*c).back = NULL;
+		liberarInfo((*aux).elem);
+		delete aux;
+		(*c).tamanio--;
+		}
+	return c;  
+	}

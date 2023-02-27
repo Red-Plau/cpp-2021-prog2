@@ -1,0 +1,183 @@
+#include "../include/cadena.h" //"cadena.h" Es propiedad de Laboratorio de Programación 2: InCo-FIng-UDELAR. (Por lo cual no lo compartire en GitHub)
+
+/* 
+BASIC CODE DEALING WITH LINKED LISTS ("cadena"s). 
+OPTIMISED.
+*/
+
+struct _rep_cadena {
+	TInfo elem;
+	
+	_rep_cadena *sig; //avanza al siguiente puntero
+	_rep_cadena *ant; //va para el puntero de atras
+	};
+
+TCadena insertarAlFinal(nat natural, double real, TCadena cad) {
+	cad = insertarAlInicio(natural, real, cad);
+	cad = cadenaSiguiente(cad);
+	return cad;
+}
+
+TCadena removerPrimero(TCadena cad) {
+	nat primero = natInfo(primeroEnCadena(cad));
+	cad = removerDeCadena(primero, cad);
+	return cad;
+}
+
+
+TCadena copiaCadena(TCadena cad) {
+	TCadena copia = crearCadena();
+	if (cad != NULL){
+		for (nat i = 0; i < cantidadEnCadena(cad); i++){
+			copia = insertarAlInicio(natInfo(primeroEnCadena(cad)), realInfo(primeroEnCadena(cad)), copia);
+			cad = cadenaSiguiente(cad);
+			copia = cadenaSiguiente(copia);
+		}
+	}
+	return copia;
+}
+
+TCadena crearCadena() {
+	_rep_cadena *nueva = NULL;
+	return nueva;
+}
+
+
+void liberarCadena(TCadena cad) {
+	if (cad != NULL){ //si la cadena no es vacia, tenemos que vaciarla
+		TCadena aux = cad;
+		if ((*cad).sig == cad){ //si tiene solo un elemento:
+			liberarInfo((*aux).elem); //liberamos el elemento
+			delete aux; //y despues el puntero
+		} else { //si no,
+			TCadena borrar = cad;
+			aux = (*aux).sig;
+			liberarInfo((*borrar).elem); //liberamos el primer elemento
+			delete borrar; //luego liberamos el primer puntero
+			borrar = aux; //y vamos al siguiente puntero
+			while (aux != cad){ //para pasar por toda la cadena, liberando
+				aux = (*aux).sig;
+				liberarInfo((*borrar).elem);
+				delete borrar;
+				borrar = aux;
+			}
+		}
+	}
+}
+
+nat cantidadEnCadena(TCadena cad) {
+	nat cantcad = 0;
+	if (cad != NULL){ //si es vacia la cadena, ya sabemos que
+		cantcad = 1;  //por lo menos un elemento hay
+		if ((*cad).sig != cad){ //mientras el siguiente no sea el primero,
+			TCadena aux = cad;
+			aux = (*aux).sig;
+			while (aux != cad){ //vamos a ir avanzando hasta que la hayamos reocorrido
+				cantcad += 1;
+				aux = (*aux).sig;
+			}
+		}
+	}
+	return cantcad;
+}
+
+bool estaEnCadena(nat natural, TCadena cad) {
+	bool cadnat = false;
+	if (cad != NULL){ //si la cadena tiene elementos, tenemos que buscar el elemento
+		TCadena aux = cad;
+		if (natInfo((*aux).elem) == natural){ //si es el primero, ya esta
+			cadnat = true;
+		} else { //si no, hay que buscar al elemento en la cadena
+			aux = (*aux).sig;
+			while (aux != cad && cadnat != true){ //si todavia no encontramos el elemento...
+				cadnat = natInfo((*aux).elem) == natural; //vemos si son iguales los nats
+				if (cadnat == false) //y en el caso que no,
+					aux = (*aux).sig;//avanzamos a ver si en el siguiente si
+			}
+		}
+	}
+	return cadnat;
+}
+
+/*aca es donde se ajusta el tema de cadena circular; al agregar un
+ elemento nuevo, ajustamos los punteros para que termine circular la
+ cadena. */
+TCadena insertarAlInicio(nat natural, double real, TCadena cad) {
+	_rep_cadena *insertar = new _rep_cadena; //creamos el puntero nuevo
+	(*insertar).elem = crearInfo(natural, real); //y le metemos el elem
+	if (cad != NULL){ //si no es vacia, tenemos que ver si:
+		if ((*cad).sig == cad){ //hay un solo elemento...
+			//(en este caso quedan circular los dos)
+			(*insertar).sig = cad;
+			(*insertar).ant = cad; 
+			(*cad).sig = insertar;
+			(*cad).ant = insertar;
+		} else { //...o si hay varios
+			/*(en este caso ajustamos todo para insertar el nuevo
+			   entre el "primer" elemento y el "ultimo", dejando la
+			   cadena circular)*/
+			(*insertar).sig = cad;
+			(*insertar).ant = (*cad).ant;
+			((*cad).ant)->sig = insertar;
+			(*cad).ant = insertar;
+		}
+	} else { //si es vacia, simplemente queda enlazado el nuevo elemento con si mismo
+		(*insertar).sig = insertar;
+		(*insertar).ant = insertar;
+	}
+	cad = insertar; //el puntero ahora mira al elemento nuevo para dejarlo como el "inicio"
+	return cad;
+}
+
+TInfo infoCadena(nat natural, TCadena cad) {
+	TCadena aux = cad;
+	while (natInfo((*aux).elem) != natural && (*aux).sig != cad){
+		aux = (*aux).sig;
+	}
+	return (*aux).elem;
+}
+
+TInfo primeroEnCadena(TCadena cad) { return (*cad).elem; }
+
+TCadena cadenaSiguiente(TCadena cad) {
+	if (cad != NULL)
+		cad = (*cad).sig;
+	return cad;
+}
+
+TCadena removerDeCadena(nat natural, TCadena cad) {
+	TCadena aux = cad;
+	if (natInfo((*cad).elem) == natural && (*cad).sig == cad){ //si hay solo un elemento
+		cad = NULL; //quitamos el puntero
+		liberarInfo((*aux).elem); //liberamos el elemento
+		delete aux; //borramos el puntero al elemento
+	} else if (natInfo((*cad).elem) == natural) { //si hay varios elementos y es el primero
+		((*cad).sig)->ant = cad->ant; //ajustamos los punteros para
+		((*cad).ant)->sig = cad->sig; //quitar el primer elemento
+		cad = (*cad).sig; //el puntero apunta al nuevo "primer elemento"
+		liberarInfo((*aux).elem); //liberamos  el elemento
+		delete aux; //borramos el puntero al elemento
+	} else { //si hay varios elementos y no es el primero
+		while (natInfo(aux->elem) != natural){ //buscamos al elemento
+			aux = (*aux).sig;
+		}
+		((*aux).sig)->ant = (*aux).ant; //ajustamos los punteros para 
+		((*aux).ant)->sig = (*aux).sig; //quitar el elemento
+		liberarInfo((*aux).elem); //liberamos el elemento
+		delete aux; //borramos el puntero al elemento
+	}
+	return cad;
+}
+
+void imprimirCadena(TCadena cad) {
+	if (cantidadEnCadena(cad) > 0){
+		TCadena aux = cad;
+		imprimirInfo((*aux).elem); //pasamos por el primer elemento asi 
+		aux = (*aux).sig;          //nos facilita la condicion del while
+		while (aux != cad){
+			imprimirInfo((*aux).elem);
+			aux = (*aux).sig;
+		}
+	}
+	printf("\n");
+}

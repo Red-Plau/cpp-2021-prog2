@@ -1,0 +1,56 @@
+#include "../include/pila.h" //"pila.h" Es propiedad de Laboratorio de Programación 2: InCo-FIng-UDELAR. (Por lo cual no lo compartire en GitHub)
+
+/* 
+BASIC CODE DEALING WITH STACKS ("pila"s). 
+OPTIMISED.
+*/
+
+struct nodo {
+	TInfo elem;
+	nodo *sig;
+	};
+
+struct _rep_pila {
+	nodo *top;
+	nat tamanio;
+	};
+
+TPila crearPila() { 
+	TPila nuevo = new _rep_pila;
+	(*nuevo).tamanio = 0;
+	(*nuevo).top = NULL;
+	return nuevo; 
+	}
+
+void liberarPila(TPila p) {
+	nodo *aux;
+	while((*p).top != NULL){
+		aux = (*p).top;
+		(*p).top = ((*p).top)->sig;
+		liberarInfo((*aux).elem);
+		delete aux;
+	}
+	delete p;
+	}
+
+nat cantidadEnPila(TPila p) { return (*p).tamanio; }
+
+TPila apilar(TInfo info, TPila p) { 
+	nodo *nuevo = new nodo;
+	(*nuevo).elem = copiaInfo(info);
+	(*nuevo).sig = (*p).top;
+	(*p).top = nuevo;
+	(*p).tamanio++;
+	return p; 
+	}
+
+TInfo cima(TPila p) { return ((*p).top)->elem; }
+
+TPila desapilar(TPila p) { 
+	nodo *aux = (*p).top;
+	(*p).top = ((*p).top)->sig;
+	liberarInfo((*aux).elem);
+	delete(aux);
+	(*p).tamanio--;
+	return p; 
+	}

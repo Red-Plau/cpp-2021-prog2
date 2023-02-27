@@ -1,0 +1,77 @@
+#include "../include/iterador.h" //"iterador.h" Es propiedad de Laboratorio de Programación 2: InCo-FIng-UDELAR. (Por lo cual no lo compartire en GitHub)
+
+/* 
+BASIC CODE DEALING WITH ITERATORS ("iterador"s). 
+OPTIMISED.
+*/
+
+struct _rep_iterador {
+	nat elem;
+	
+	_rep_iterador *primero; //nota el primer elemento del iterador
+	_rep_iterador *ultimo;  //nota el ultimo elemento del iterador
+	
+	_rep_iterador *actual;  //el puntero a la posicion actual
+	_rep_iterador *sig;     //avanza el puntero actual
+};
+
+TIterador crearIterador() {
+	TIterador nuevo = new _rep_iterador;
+	(*nuevo).primero = NULL;
+	(*nuevo).actual = NULL;
+	(*nuevo).ultimo = NULL;
+	return nuevo;
+}
+
+void liberarIterador(TIterador iter) {
+	reiniciarIterador(iter);  //volvemos a la primera posicion (si existe)
+	if ((*iter).actual != NULL){ //y en el caso que no sea vacia
+		TIterador aux = iter;
+		while (aux != NULL){ //vamos vaciando a la cadena
+			iter = (*iter).sig;
+			delete aux;
+			aux = iter;
+		}
+	}
+	delete iter;
+}
+
+bool estaDefinidaActual(TIterador iter) {
+	return ((*iter).actual != NULL);
+}
+
+
+// [ primero | actual1 | ultimo ] -sig> [ primero | actual2 | ultimo ] etc.
+void agregarAIterador(nat elem, TIterador const iter) {
+	TIterador insert = new _rep_iterador;
+	(*insert).elem = elem;
+	
+	(*insert).sig = NULL; //como vamos a dejarlo en la ultima posicion, el siguiente
+	                      //va a ser vacio
+	if ((*iter).primero != NULL){ //si tiene algo adentro del iterador
+		((*iter).ultimo)->sig = insert; //el siguiente del ultimo va a ser el nuevo ultimo
+		(*iter).ultimo = insert; //cambiamos el puntero de ultimo
+		(*insert).primero = (*iter).primero; //ajustamos el primero y el ultimo para
+		(*insert).ultimo = (*iter).ultimo;   //que apunten al mismo
+	}else{                        //si es vacio
+		(*iter).sig = insert; //el siguiente al actual es el nuevo
+		(*iter).primero = insert; //ajustamos al primero y al ultimo para que
+		(*iter).ultimo = insert;  //sean el mismo
+	}
+}
+
+void reiniciarIterador(TIterador const iter) {
+	if (iter != NULL){
+		(*iter).actual = (*iter).primero;
+	}
+}
+
+void avanzarIterador(TIterador const iter) {
+	if (estaDefinidaActual(iter)){
+		(*iter).actual = ((*iter).actual)->sig;
+	}
+}
+
+nat actualEnIterador(TIterador iter) {
+  return ((*iter).actual)->elem;
+}
